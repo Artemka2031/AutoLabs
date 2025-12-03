@@ -1,0 +1,282 @@
+<mxfile host="Electron" agent="Claude" version="24.0.0">
+  <diagram name="AutoLabs Infrastructure" id="infrastructure-detailed">
+    <mxGraphModel dx="2400" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Proxmox Hypervisor (основной контейнер) -->
+        <mxCell id="proxmox-container" value="PROXMOX HYPERVISOR (KVM/LXC)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontStyle=1;fontSize=18;startSize=40;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1520" height="1120" as="geometry" />
+        </mxCell>
+
+        <!-- VM 1: GitLab -->
+        <mxCell id="vm-gitlab" value="VM: GitLab&#xa;4 CPU, 8 GB RAM, 100 GB SSD" style="swimlane;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;startSize=50;" vertex="1" parent="proxmox-container">
+          <mxGeometry x="40" y="80" width="400" height="420" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gitlab-ce" value="GitLab CE/EE&#xa;&#xa;- Git repositories&#xa;- Web UI&#xa;- User management" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="vm-gitlab">
+          <mxGeometry x="20" y="70" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gitlab-ci" value="GitLab CI/CD&#xa;&#xa;- Build pipelines&#xa;- Run tests&#xa;- Auto deploy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="vm-gitlab">
+          <mxGeometry x="220" y="70" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gitlab-registry" value="Container Registry&#xa;&#xa;- Docker images&#xa;- Lab images&#xa;- Platform images" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="vm-gitlab">
+          <mxGeometry x="20" y="170" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gitlab-runner" value="GitLab Runner&#xa;&#xa;- Docker executor&#xa;- K8s deploy&#xa;- Build images" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="vm-gitlab">
+          <mxGeometry x="220" y="170" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gitlab-ports" value="Порты:&#xa;:443 (HTTPS)&#xa;:5050 (Registry)&#xa;:22 (SSH Git)" style="text;html=1;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=10;fontFamily=Courier New;" vertex="1" parent="vm-gitlab">
+          <mxGeometry x="20" y="270" width="360" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gitlab-connections" value="Подключения:&#xa;→ K8s API (deploy)&#xa;→ VM Database (own PostgreSQL)" style="text;html=1;strokeColor=#d79b00;fillColor=#ffe6cc;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=10;fontFamily=Courier New;" vertex="1" parent="vm-gitlab">
+          <mxGeometry x="20" y="340" width="360" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- VM 2: Database -->
+        <mxCell id="vm-database" value="VM: Database&#xa;4 CPU, 8 GB RAM, 200 GB SSD" style="swimlane;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=14;startSize=50;" vertex="1" parent="proxmox-container">
+          <mxGeometry x="480" y="80" width="400" height="420" as="geometry" />
+        </mxCell>
+
+        <mxCell id="postgresql" value="PostgreSQL 15&#xa;&#xa;Databases:&#xa;- autolabs_platform&#xa;- autolabs_infrastructure&#xa;- gitlab&#xa;- zitadel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;" vertex="1" parent="vm-database">
+          <mxGeometry x="20" y="70" width="360" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="redis" value="Redis 7&#xa;&#xa;DB 0: API cache&#xa;DB 1: User sessions&#xa;DB 2: Celery tasks&#xa;DB 3: Rate limiting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;" vertex="1" parent="vm-database">
+          <mxGeometry x="20" y="190" width="360" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="minio" value="Minio (S3)&#xa;&#xa;Buckets:&#xa;- lab-configs/ (YAML)&#xa;- lab-volumes/ (archives)&#xa;- static-files/ (images, docs)&#xa;- backups/ (dumps)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;" vertex="1" parent="vm-database">
+          <mxGeometry x="20" y="310" width="360" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- VM 3: Kubernetes Cluster -->
+        <mxCell id="vm-k8s" value="VM: Kubernetes Cluster&#xa;12 CPU, 16 GB RAM, 100 GB SSD" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=14;startSize=50;" vertex="1" parent="proxmox-container">
+          <mxGeometry x="920" y="80" width="560" height="980" as="geometry" />
+        </mxCell>
+
+        <!-- K8s Control Plane -->
+        <mxCell id="k8s-control-plane" value="Control Plane (2 CPU, 2 GB)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;" vertex="1" parent="vm-k8s">
+          <mxGeometry x="20" y="70" width="520" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Namespace: platform -->
+        <mxCell id="ns-platform" value="namespace: platform" style="swimlane;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;startSize=30;" vertex="1" parent="vm-k8s">
+          <mxGeometry x="20" y="130" width="520" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="frontend" value="Frontend&#xa;React/Vue&#xa;1-2 replicas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="ns-platform">
+          <mxGeometry x="20" y="45" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="backend-platform" value="Backend Platform&#xa;FastAPI&#xa;2-3 replicas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="ns-platform">
+          <mxGeometry x="190" y="45" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="platform-note" value="→ PostgreSQL&#xa;→ Redis, Minio&#xa;→ Zitadel (auth)" style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontFamily=Courier New;" vertex="1" parent="ns-platform">
+          <mxGeometry x="360" y="45" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Namespace: infrastructure -->
+        <mxCell id="ns-infrastructure" value="namespace: infrastructure" style="swimlane;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;startSize=30;" vertex="1" parent="vm-k8s">
+          <mxGeometry x="20" y="270" width="520" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="backend-infra" value="Backend Infra&#xa;FastAPI + K8s Client&#xa;1-2 replicas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="ns-infrastructure">
+          <mxGeometry x="20" y="45" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="celery-worker" value="Celery Worker&#xa;Async tasks&#xa;2-3 replicas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="ns-infrastructure">
+          <mxGeometry x="190" y="45" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="infra-note" value="→ K8s API&#xa;→ Minio (configs)&#xa;→ RabbitMQ" style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontFamily=Courier New;" vertex="1" parent="ns-infrastructure">
+          <mxGeometry x="360" y="45" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Namespace: auth -->
+        <mxCell id="ns-auth" value="namespace: auth" style="swimlane;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;startSize=30;" vertex="1" parent="vm-k8s">
+          <mxGeometry x="20" y="410" width="520" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="zitadel" value="Zitadel&#xa;OAuth2/OIDC&#xa;2 replicas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="ns-auth">
+          <mxGeometry x="20" y="45" width="150" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="auth-note" value="JWT tokens, User management&#xa;→ PostgreSQL (zitadel DB)" style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontFamily=Courier New;" vertex="1" parent="ns-auth">
+          <mxGeometry x="190" y="45" width="310" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Namespace: messaging -->
+        <mxCell id="ns-messaging" value="namespace: messaging" style="swimlane;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;startSize=30;" vertex="1" parent="vm-k8s">
+          <mxGeometry x="20" y="530" width="520" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rabbitmq" value="RabbitMQ 3.12&#xa;Message Broker&#xa;1 replica" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="ns-messaging">
+          <mxGeometry x="20" y="45" width="150" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="messaging-note" value="Queues: lab.create, lab.delete&#xa;Celery tasks, Notifications" style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontFamily=Courier New;" vertex="1" parent="ns-messaging">
+          <mxGeometry x="190" y="45" width="310" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Namespace: labs -->
+        <mxCell id="ns-labs" value="namespace: labs (dynamic)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#ffcc99;strokeColor=#ff9933;fontSize=12;fontStyle=1;startSize=30;" vertex="1" parent="vm-k8s">
+          <mxGeometry x="20" y="650" width="520" height="200" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lab-pod" value="Pod: lab-123-student-456&#xa;Dynamic resources" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="ns-labs">
+          <mxGeometry x="20" y="45" width="150" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lab-service" value="Service: SSH access&#xa;NodePort 30000-32767" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="ns-labs">
+          <mxGeometry x="190" y="45" width="150" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lab-netpol" value="NetworkPolicy&#xa;Isolation rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="ns-labs">
+          <mxGeometry x="360" y="45" width="140" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lab-pvc" value="PersistentVolumeClaim&#xa;5Gi storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="ns-labs">
+          <mxGeometry x="20" y="110" width="150" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="labs-note" value="Created by Backend Infrastructure&#xa;via Python Kubernetes Client" style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontFamily=Courier New;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="ns-labs">
+          <mxGeometry x="190" y="110" width="310" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Namespace: ingress-nginx -->
+        <mxCell id="ns-ingress" value="namespace: ingress-nginx" style="swimlane;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;startSize=30;" vertex="1" parent="vm-k8s">
+          <mxGeometry x="20" y="870" width="520" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="nginx-ingress" value="Nginx Ingress Controller&#xa;HTTP/HTTPS routing&#xa;2 replicas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="ns-ingress">
+          <mxGeometry x="20" y="40" width="200" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ingress-routes" value="Routes: / → Frontend, /api → Backend,&#xa;/auth → Zitadel" style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontFamily=Courier New;" vertex="1" parent="ns-ingress">
+          <mxGeometry x="240" y="40" width="260" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Легенда - Инструменты управления -->
+        <mxCell id="legend-tools" value="ИНСТРУМЕНТЫ УПРАВЛЕНИЯ" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=14;startSize=40;" vertex="1" parent="proxmox-container">
+          <mxGeometry x="40" y="540" width="840" height="220" as="geometry" />
+        </mxCell>
+
+        <mxCell id="terraform-box" value="Terraform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="legend-tools">
+          <mxGeometry x="20" y="60" width="250" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="terraform-desc" value="• Создание VMs в Proxmox&#xa;• Multi-environment (dev/stage/prod)&#xa;• Multi-cloud готовность (Yandex Cloud, AWS, etc)&#xa;• Infrastructure as Code" style="text;html=1;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="legend-tools">
+          <mxGeometry x="20" y="110" width="250" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="helm-box" value="Helm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="legend-tools">
+          <mxGeometry x="300" y="60" width="250" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="helm-desc" value="• Установка статичных компонентов в K8s&#xa;• Готовые charts (PostgreSQL, Redis, etc)&#xa;• Multi-environment через values&#xa;• Rollback возможности" style="text;html=1;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="legend-tools">
+          <mxGeometry x="300" y="110" width="250" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="python-box" value="Python Kubernetes Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="legend-tools">
+          <mxGeometry x="580" y="60" width="240" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="python-desc" value="• Динамическое создание лабораторных работ&#xa;• Управление Pods, Services, NetworkPolicies&#xa;• Интеграция с FastAPI Backend&#xa;• Максимальная скорость и гибкость" style="text;html=1;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="legend-tools">
+          <mxGeometry x="580" y="110" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Сетевые связи -->
+
+        <!-- GitLab → K8s -->
+        <mxCell id="arrow-gitlab-k8s" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#d79b00;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="proxmox-container" source="gitlab-runner" target="vm-k8s">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="300" as="sourcePoint" />
+            <mxPoint x="550" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-gitlab-k8s-label" value="Deploy via kubectl/helm" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#d79b00;fontStyle=1;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="arrow-gitlab-k8s">
+          <mxGeometry x="-0.1" y="1" relative="1" as="geometry">
+            <mxPoint x="20" y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Database → Backend Platform -->
+        <mxCell id="arrow-db-platform" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#6c8ebf;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="proxmox-container" source="postgresql" target="ns-platform">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="700" y="300" as="sourcePoint" />
+            <mxPoint x="750" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-db-platform-label" value="PostgreSQL :5432&#xa;Redis :6379&#xa;Minio :9000" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#6c8ebf;fontStyle=1;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="arrow-db-platform">
+          <mxGeometry x="0.1" y="2" relative="1" as="geometry">
+            <mxPoint x="-10" y="-25" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Database → Backend Infrastructure -->
+        <mxCell id="arrow-db-infra" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#82b366;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="proxmox-container" source="redis" target="ns-infrastructure">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="700" y="400" as="sourcePoint" />
+            <mxPoint x="750" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Backend Infrastructure → Labs namespace -->
+        <mxCell id="arrow-infra-labs" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=3;strokeColor=#ff6600;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="proxmox-container" source="ns-infrastructure" target="ns-labs">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1100" y="500" as="sourcePoint" />
+            <mxPoint x="1150" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-infra-labs-label" value="Create/Delete Labs&#xa;via K8s API" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontColor=#ff6600;fontStyle=1;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="arrow-infra-labs">
+          <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+            <mxPoint x="60" y="-5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Примечания -->
+        <mxCell id="note-phases" value="МАСШТАБИРОВАНИЕ ПО ФАЗАМ" style="swimlane;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;startSize=35;" vertex="1" parent="proxmox-container">
+          <mxGeometry x="40" y="800" width="840" height="250" as="geometry" />
+        </mxCell>
+
+        <mxCell id="phase1-title" value="Фаза 1: MVP" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;fontStyle=1;" vertex="1" parent="note-phases">
+          <mxGeometry x="20" y="50" width="250" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="phase1-desc" value="• Ресурсы: 12-24 CPU, 16-32 GB RAM&#xa;• GitLab: VPS аренда (экономия)&#xa;• Database: Отдельная VM&#xa;• K8s: Single-node&#xa;• Студентов: до 50 одновременно&#xa;• Лаб: до 10 активных" style="text;html=1;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="note-phases">
+          <mxGeometry x="20" y="90" width="250" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="phase2-title" value="Фаза 2: Production" style="text;html=1;strokeColor=#82b366;fillColor=#d5e8d4;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;fontStyle=1;" vertex="1" parent="note-phases">
+          <mxGeometry x="295" y="50" width="250" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="phase2-desc" value="• Ресурсы: 24+ CPU, 32+ GB RAM&#xa;• GitLab: Отдельная VM в Proxmox&#xa;• Database: Dedicated VM (8 CPU, 16 GB)&#xa;• K8s: Multi-node (3 VMs)&#xa;• Студентов: до 200 одновременно&#xa;• Лаб: до 50 активных&#xa;• High Availability" style="text;html=1;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="note-phases">
+          <mxGeometry x="295" y="90" width="250" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="phase3-title" value="Фаза 3: Enterprise (Multi-Cloud)" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;fontStyle=1;" vertex="1" parent="note-phases">
+          <mxGeometry x="570" y="50" width="250" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="phase3-desc" value="• Hetzner: GitLab VPS&#xa;• Proxmox: Database VM (конфиденциально)&#xa;• Yandex Cloud: Managed K8s&#xa;• Автоскейлинг&#xa;• Geo-распределение&#xa;• Disaster Recovery&#xa;• Студентов: неограниченно" style="text;html=1;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="note-phases">
+          <mxGeometry x="570" y="90" width="250" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Заголовок схемы -->
+        <mxCell id="title" value="AutoLabs Platform - Detailed Infrastructure Schema" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="40" y="0" width="1520" height="40" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
